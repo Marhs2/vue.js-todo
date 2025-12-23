@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from "vue";
+import { computed, ref } from "vue";
 import CreateTodo from "./components/todo.vue";
 
 
@@ -9,7 +9,7 @@ const todoList = ref([])
 const isAll = ref(false);
 const type = ref(location.hash.replace("#/", ''))
 
-function addNewTodo() {
+const addNewTodo = () => {
   if (!inputText.value.trim()) return
 
   const newTodo = {
@@ -33,33 +33,17 @@ const toggleTodo = () => {
 
 const clearCompleted = () => todoList.value = todoList.value.filter(e => e.isFinish !== true)
 
-window.addEventListener("hashchange", () => {
-  type.value = location.hash.replace("#/", '')
-})
-
-watch(todoList, () => {
-  isAll.value = todoList?.value.every(e => e.isFinish) ?? false;
-}, { deep: true })
-
+window.addEventListener("hashchange", () => type.value = location.hash.replace("#/", ''))
 
 const editTodo = (e) => todoList.value.forEach(el => { if (el.id == e) { el.isEdit = true } })
 
+const editCom = (e) => todoList.value.forEach(el => { if (el.id == e[0]) { el.isEdit = false; el.value = e[1] } })
 
-const editCom = (e) => todoList.value.forEach(el => {
-  if (el.id == e[0]) {
-    el.isEdit = false; el.value = e[1];
-    console.log(e);
-    
-  }
-})
+const isZero = computed(() => todoList.value.length !== 0);
 
+const allCompleted = computed(() => todoList.value.every(e => e.isFinish))
 
-
-
-
-
-
-
+const count = computed(() => todoList.value.filter(e => !e.isFinish).length)
 
 </script>
 <template>
@@ -70,26 +54,20 @@ const editCom = (e) => todoList.value.forEach(el => {
         autofocus />
     </header>
     <section class="main">
-      <input id="toggle-all" class="toggle-all" type="checkbox" @change="toggleTodo()" v-model="isAll" />
-      <label for="toggle-all" v-show="todoList.length !== 0">Mark all as complete</label>
+      <input id="toggle-all" class="toggle-all" type="checkbox" @change="toggleTodo()" v-model="allCompleted" />
+      <label for="toggle-all" v-show="isZero">Mark all as complete</label>
       <ul class="todo-list">
         <CreateTodo :list="todoList" :hash="type" @remove="delTodo" @edit="editTodo" @editCom="editCom">
         </CreateTodo>
       </ul>
-      <footer class="footer" v-show="todoList.length !== 0">
-        <span class="todo-count"> <strong>{{todoList.filter(e => e.isFinish !== true).length}} </strong> {{
-          todoList.length === 1 ? 'item' : 'items'
-          }} left</span>
+      <footer class="footer" v-show="isZero">
+        <span class="todo-count">
+          <strong>{{ count }}</strong>
+          {{ count == 1 ? 'item' : 'items' }} left
+        </span>
         <ul class="filters">
-          <li>
-            <a href="#/" :class="type === '' ? 'selected' : ''">All</a>
-          </li>
-          <li>
-            <a href=" #/active" :class="type === 'active' ? 'selected' : ''"> Active</a>
-          </li>
-          <li>
-            <a href="#/completed" :class="type === 'completed' ? 'selected' : ''"> Completed
-            </a>
+          <li v-for="(item, index) in ['All', 'Active', 'Completed']" :key="index">
+            <a :href="`#/${item}`" :class="type == item ? 'selected' : ''">{{ item }}</a>
           </li>
         </ul>
         <button class="clear-completed" @click="clearCompleted"> Clear

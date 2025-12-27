@@ -1,16 +1,11 @@
 <script setup>
 import { computed, ref } from 'vue';
 
-
 const props = defineProps(['list', 'hash'])
 
 const editText = ref("")
 
-const emit = defineEmits(['remove', 'edit', 'editCom']);
-
-const vFocus = {
-  mounted: (el) => { el.focus() }
-}
+const emit = defineEmits(['remove', 'edit', 'editCom', 'toggle']);
 
 
 const filteredTodo = computed(() => {
@@ -22,20 +17,22 @@ const filteredTodo = computed(() => {
   return props.list
 })
 
+const vFocus = {
+  mounted: (el) => el.focus()
+};
 
 </script>
 
 <template>
   <li v-for="item in filteredTodo" :key="item.id" :class="{ completed: item.isFinish, editing: item.isEdit }">
     <div class="view">
-      <input class="toggle" type="checkbox" v-model="item.isFinish" />
+      <input class="toggle" type="checkbox" @change="$emit('toggle', item.id)" :checked="item.isFinish" />
       <label @dblclick="$emit('edit', item.id); editText = item.value;">{{ item.value }} </label>
       <button class="destroy" @click="$emit('remove', item.id)"></button>
     </div>
-    <input class="edit" v-model="editText" type="text" v-show="item.isEdit"
-    @blur="$emit('editCom', [item.id, !editText.trim() ? item.value : editText ]);"
-    @keyup.enter="(e) => e.target.blur()""
-    v-if="item.isEdit" v-focus />
+    <input class="edit" v-model="editText" type="text"
+      @blur="$emit('editCom', [item.id, !editText.trim() ? item.value : editText]);"
+      @keyup.enter="(e) => e.target.blur()" v-if="item.isEdit" v-focus />
 
   </li>
 </template>

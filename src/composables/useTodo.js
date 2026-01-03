@@ -42,7 +42,7 @@ export function useTodo() {
   }
 
   const editEnd = (id, value) => {
-    if (!value.trim()) todoList.value = todoList.value.filter(e => e.id !== id)
+    if (!value.trim()) return todoList.value = todoList.value.filter(e => e.id !== id)
 
     todoList.value.forEach((e) => {
       if (e.id === id) {

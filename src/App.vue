@@ -1,79 +1,45 @@
 <script setup>
-import { computed, ref } from "vue";
-import CreateTodo from "./components/todo.vue";
+import { computed } from 'vue';
+import CreateTodo from './components/createTodo.vue';
+import { useTodo } from './composables/useTodo';
 
 
-let id = 0;
-const inputText = ref("")
-const todoList = ref([])
-const type = ref(location.hash.replace("#/", ''))
+const { todoList, fitleredTodo, inputValue, createTodo, removeTodo, toggleTodo, toggleAll, clearCompleted, hash, editAble, editEnd } = useTodo()
 
-const addNewTodo = () => {
-  if (!inputText.value.trim()) return
+const countActive = () => todoList.value.filter(e => !e.isFinish).length;
 
-  const newTodo = {
-    id: id++,
-    value: inputText.value,
-    isFinish: false,
-    isEdit: false
-  }
-
-  todoList.value.push(newTodo)
-
-  inputText.value = ''
-}
-
-const delTodo = idx => todoList.value = todoList.value.filter(e => e.id !== idx)
-
-const toggleTodo = () => {
-  const isAll = todoList.value.every(e => e.isFinish);
-  todoList.value.forEach(e => e.isFinish = !isAll)
-}
-
-const clearCompleted = () => todoList.value = todoList.value.filter(e => e.isFinish !== true)
-
-window.addEventListener("hashchange", () => type.value = location.hash.replace("#/", ''))
-
-const editTodo = (e) => todoList.value.forEach(el => { if (el.id === e) { el.isEdit = true } })
-
-const toggle = (e) => todoList.value.forEach(el => { if (el.id === e) { el.isFinish = !el.isFinish } })
-
-const editCom = (e) => todoList.value.forEach(el => { if (el.id === e[0]) { el.isEdit = false; el.value = e[1] } })
-
-const isZero = computed(() => todoList.value.length !== 0);
-
-const allCompleted = computed(() => todoList.value.every(e => e.isFinish))
-
-const count = computed(() => todoList.value.filter(e => !e.isFinish).length)
-
+const isAll = computed(() => todoList.value.every(e => e.isFinish))
 </script>
+
 <template>
   <section class="todoapp">
     <header class="header">
       <h1>todos</h1>
-      <input class="new-todo" placeholder="What needs to be done?" v-model="inputText" @keyup.enter="addNewTodo()"
-        autofocus />
+      <input class="new-todo" placeholder="What needs to be done?" autofocus v-model="inputValue"
+        @keyup.enter="createTodo" />
     </header>
     <section class="main">
-      <input id="toggle-all" class="toggle-all" type="checkbox" @change="toggleTodo()" v-model="allCompleted" />
-      <label for="toggle-all" v-show="isZero">Mark all as complete</label>
+      <input id="toggle-all" class="toggle-all" type="checkbox" @click="toggleAll" v-model="isAll" />
+      <label for="toggle-all" v-show="todoList.length > 0">Mark all as complete</label>
       <ul class="todo-list">
-        <CreateTodo :list="todoList" :hash="type" @remove="delTodo" @edit="editTodo" @editCom="editCom"
-          @toggle="toggle">
-        </CreateTodo>
+        <CreateTodo :todos="fitleredTodo" @remove="removeTodo" @edit-able='editAble' @toggle="toggleTodo"
+          @edit-end="editEnd"></CreateTodo>
       </ul>
-      <footer class="footer" v-show="isZero">
-        <span class="todo-count">
-          <strong>{{ count }}</strong>
-          {{ count == 1 ? 'item' : 'items' }} left
-        </span>
+      <footer class="footer" v-show="todoList.length > 0">
+        <span class="todo-count"><strong>{{ countActive() }}</strong> {{ countActive() === 1 ? 'item' : 'items' }}
+          left</span>
         <ul class="filters">
-          <li v-for="(item, index) in ['All', 'Active', 'Completed']" :key="index">
-            <a :href="`#/${item}`" :class="type == item ? 'selected' : ''">{{ item }}</a>
+          <li>
+            <a href="#/" :class="{ selected: hash === '#/' || hash === '' }">All</a>
+          </li>
+          <li>
+            <a href="#/active" :class="{ selected: hash === '#/active' }">Active</a>
+          </li>
+          <li>
+            <a href="#/completed" :class="{ selected: hash === '#/completed' }">Completed</a>
           </li>
         </ul>
-        <button class="clear-completed" @click="clearCompleted"> Clear
-          completed </button>
+        <button class="clear-completed" @click="clearCompleted">Clear completed</button>
       </footer>
     </section>
   </section>

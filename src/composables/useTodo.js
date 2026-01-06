@@ -1,11 +1,11 @@
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, ref, watch } from "vue";
 
 export function useTodo() {
   const todoList = ref(JSON.parse(localStorage.getItem('todoList')) ?? [])
   const inputValue = ref('')
   const hash = ref(location.hash)
 
-  onMounted(() => window.addEventListener("hashchange", () => hash.value = location.hash))
+  window.addEventListener("hashchange", () => hash.value = location.hash)
 
   watch(todoList, () => {
     localStorage.setItem('todoList', JSON.stringify(todoList.value))
